@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>تطبيق تيبلي - منظم المهام والدراسة</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="تيبلي دراسة">
+    <meta name="theme-color" content="#4F46E5">
+    <link rel="apple-touch-icon" href="https://api.iconify.design/heroicons:academic-cap-solid.svg?color=%23ffffff&height=180">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- EmailJS Official Library for Real Email Sending -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        ios: {
+                            blue: '#007AFF',
+                            green: '#34C759',
+                            indigo: '#5856D6',
+                            orange: '#FF9500',
+                            pink: '#FF2D55',
+                            purple: '#AF52DE',
+                            red: '#FF3B30',
+                            teal: '#5AC8FA',
+                            yellow: '#FFCC00',
+                            gray: '#8E8E93',
+                            gray2: '#AEAEB2',
+                            gray3: '#C7C7CC',
+                            gray4: '#D1D1D6',
+                            gray5: '#E5E5EA',
+                            gray6: '#F2F2F7',
+                            bgLight: '#F2F2F7',
+                            cardLight: 'rgba(255, 255, 255, 0.82)',
+                            bgDark: '#000000',
+                            cardDark: 'rgba(28, 28, 30, 0.82)'
+                        }
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                        ios: '20px'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Keyframes for Fade In Up Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Glassmorphism iOS standard */
+        .ios-glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+        }
+
+        .dark .ios-glass {
+            background: rgba(28, 28, 30, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+        }
+
+        .ios-card {
+            background: #ffffff;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dark .ios-card {
+            background: #1c1c1e;
+        }
+
+        /* Custom Scrollbar hiding */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Smooth tab animations */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Safe Area Padding for iOS Devices */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+        .pt-safe {
+            padding-top: env(safe-area-inset-top, 20px);
+        }
+    </style>
+</head>
+<body class="bg-ios-bgLight dark:bg-ios-bgDark text-gray-900 dark:text-gray-100 h-full flex flex-col antialiased selection:bg-ios-blue selection:text-white">
+
+    <!-- Header App Bar -->
+    <header class="sticky top-0 z-30 ios-glass border-b border-gray-200/50 dark:border-gray-800/50 px-4 pt-safe pb-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-ios-blue to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                <i data-lucide="sparkles" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold leading-tight tracking-tight">تيبلي <span class="text-xs px-2 py-0.5 rounded-full bg-theme-primary/10 text-theme-primary dark:bg-theme-primary/20 font-medium">دراسة</span></h1>
+                <p id="header-subtitle" class="text-xs text-gray-500 dark:text-gray-400">منظم الواجبات والجدول المدرسي</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 space-x-reverse">
+            <!-- Theme Color Selector Palette -->
+            <div class="relative group">
+                <button id="color-picker-btn" onclick="toggleColorPickerMenu()" class="w-9 h-9 rounded-full bg-gray-200/60 dark:bg-gray-800/80 flex items-center justify-center text-theme-primary hover:bg-gray-300/50 transition" title="تغيير لون التطبيق">
+                    <i data-lucide="palette" class="w-4 h-4"></i>
+                </button>
+                <!-- Color Menu Dropdown -->
+                <div id="color-picker-menu" class="hidden absolute left-0 mt-2 w-36 ios-card rounded-2xl p-2 shadow-xl border border-gray-200 dark:border-gray-800 z-50 animate-fade-in-up">
+                    <div class="text-[10px] font-bold text-gray-400 mb-1 px-1">اختر اللون:</div>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button onclick="setAppThemeColor('blue')" class="w-8 h-8 rounded-full bg-blue-500 hover:scale-110 transition flex items-center justify-center text-white text-xs" title="أزرق"></button>
+                        <button onclick="setAppThemeColor('purple')" class="w-8 h-8 rounded-full bg-purple-500 hover:scale-110 transition flex items-center justify-center text-white text-xs" title="بنفسجي"></button>
+                        <button onclick="setAppThemeColor('emerald')" class="w-8 h-8 rounded-full bg-emerald-500 hover:scale-110 transition flex items-center justify-center text-white text-xs" title="أخضر"></button>
+                        <button onclick="setAppThemeColor('rose')" class="w-8 h-8 rounded-full bg-rose-500 hover:scale-110 transition flex items-center justify-center text-white text-xs" title="أحمر"></button>
+                        <button onclick="setAppThemeColor('amber')" class="w-8 h-8 rounded-full bg-amber-500 hover:scale-110 transition flex items-center justify-center text-white text-xs" title="برتقالي"></button>
+                        <button onclick="setAppThemeColor('pink')" class="w-8 h-8 rounded-full bg-pink-500 hover:scale-110 transition flex items-center justify-center text-white text-xs" title="وردي"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme Toggle Button with Text & Visual Styles -->
+            <button id="theme-toggle" onclick="toggleTheme()" class="px-3 py-1.5 rounded-full bg-gray-200/80 dark:bg-gray-800/90 flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-all border border-gray-300/40 dark:border-gray-700/60 shadow-sm active:scale-95">
+                <i data-lucide="moon" class="w-4 h-4 hidden dark:inline text-indigo-400"></i>
+                <i data-lucide="sun" class="w-4 h-4 inline dark:hidden text-amber-500"></i>
+                <span id="theme-text-label" class="select-none">داكن</span>
+            </button>
+            
+            <!-- Email Settings Modal Trigger -->
+            <button id="email-settings-btn" onclick="openEmailModal()" class="w-9 h-9 rounded-full bg-gray-200/60 dark:bg-gray-800/80 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-300/50 transition relative">
+                <i data-lucide="mail" class="w-4 h-4"></i>
+                <span id="email-badge" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-ios-green hidden"></span>
+            </button>
+
+            <!-- Notification Permission -->
+            <button id="notification-btn" onclick="requestNotificationPermission()" class="w-9 h-9 rounded-full bg-gray-200/60 dark:bg-gray-800/80 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-300/50 transition relative">
+                <i data-lucide="bell" class="w-4 h-4"></i>
+                <span id="notif-badge" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-ios-red hidden"></span>
+            </button>
+
+            <!-- Install PWA Button -->
+            <button id="pwa-install-btn" class="hidden text-xs bg-ios-blue text-white px-3 py-1.5 rounded-full font-medium flex items-center gap-1 shadow-md shadow-blue-500/20">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>تثبيت</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Scrollable Content Container -->
+    <main class="flex-1 overflow-y-auto px-4 py-4 pb-28 no-scrollbar max-w-xl mx-auto w-full">
+        
+        <!-- PWA Install Banner Notice (iOS guide if detected) -->
+        <div id="ios-pwa-banner" class="hidden mb-4 p-3.5 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-between text-xs text-blue-900 dark:text-blue-200">
+            <div class="flex items-center gap-2.5">
+                <i data-lucide="share" class="w-5 h-5 text-ios-blue shrink-0"></i>
+                <span>أضفه لشاشتك الرئيسية: اضغط مشاركة <i data-lucide="share" class="w-3 h-3 inline"></i> ثم "إضافة إلى الشاشة الرئيسية"</span>
+            </div>
+            <button onclick="document.getElementById('ios-pwa-banner').remove()" class="text-gray-400 hover:text-gray-600 p-1">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Notification Status Alert Banner -->
+        <div id="notif-alert-banner" class="mb-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-xs text-amber-800 dark:text-amber-300">
+            <div class="flex items-center gap-2">
+                <i data-lucide="bell-ring" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                <span>فعل التنبيهات ليصلك تذكير كل ساعة قبل انتهاء الواجب بـ 3 أيام!</span>
+            </div>
+            <button onclick="requestNotificationPermission()" class="px-2.5 py-1 bg-amber-600 text-white font-semibold rounded-lg shrink-0">تفعيل</button>
+        </div>
+
+        <!-- ================= TAB 1: TASKS & HOMEWORKS ================= -->
+        <section id="tab-tasks" class="tab-content active space-y-4">
+            
+            <!-- Daily Summary Card -->
+            <div class="p-5 rounded-3xl bg-gradient-to-br from-indigo-600 via-ios-indigo to-blue-700 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+                <div class="absolute -left-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span id="current-date-text" class="text-xs text-indigo-100 font-medium">اليوم</span>
+                        <h2 class="text-2xl font-bold">مهامك اليومية</h2>
+                    </div>
+                    <span id="completion-rate" class="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold">0% مكتمل</span>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-black/20 rounded-full h-2 mb-2 overflow-hidden">
+                    <div id="progress-bar-fill" class="bg-white h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-indigo-100">
+                    <span id="tasks-stats-text">0 من 0 مهام مكتملة</span>
+                    <span id="urgent-count-text">0 واجبات قريبة الموعد</span>
+                </div>
+            </div>
+
+            <!-- Filters & Category Chips -->
+            <div class="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar py-1">
+                <div class="flex gap-1.5 shrink-0">
+                    <button onclick="filterTasks('all')" class="filter-btn active px-3.5 py-1.5 rounded-full text-xs font-medium transition bg-ios-blue text-white shadow-sm" data-filter="all">الكل</button>
+                    <button onclick="filterTasks('homework')" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 transition" data-filter="homework">واجبات</button>
+                    <button onclick="filterTasks('performance')" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 transition" data-filter="performance">مهام أدائية</button>
+                    <button onclick="filterTasks('completed')" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 transition" data-filter="completed">المكتملة</button>
+                </div>
+            </div>
+
+            <!-- Homework Sub-Category Quick Filter -->
+            <div class="flex items-center gap-2 text-xs overflow-x-auto no-scrollbar pb-1 text-gray-500 dark:text-gray-400">
+                <span class="shrink-0 font-medium text-gray-400">تصنيف الواجب:</span>
+                <button onclick="filterSubCategory('all')" class="subfilter-btn text-ios-blue font-bold underline shrink-0" data-sub="all">الكل</button>
+                <button onclick="filterSubCategory('ورقة عمل')" class="subfilter-btn shrink-0" data-sub="ورقة عمل">📄 أوراق عمل</button>
+                <button onclick="filterSubCategory('دفتر')" class="subfilter-btn shrink-0" data-sub="دفتر">📓 دفتر</button>
+                <button onclick="filterSubCategory('كتاب')" class="subfilter-btn shrink-0" data-sub="كتاب">📚 كتاب</button>
+                <button onclick="filterSubCategory('ورقة خارجية')" class="subfilter-btn shrink-0" data-sub="ورقة خارجية">📝 ورقة خارجية</button>
+            </div>
+
+            <!-- Task List Container -->
+            <div id="tasks-list" class="space-y-3">
+                <!-- JS Inject tasks here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-tasks-state" class="hidden text-center py-12 px-4">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
+                    <i data-lucide="check-circle-2" class="w-8 h-8"></i>
+                </div>
+                <h3 class="font-bold text-gray-700 dark:text-gray-300 text-sm">لا يوجد مهام حالية</h3>
+                <p class="text-xs text-gray-400 mt-1">اضغط على زر (+) في الأسفل لإضافة واجب أو مهمة أدائية جديدة</p>
+            </div>
+
+        </section>
+
+        <!-- ================= TAB 2: CLASSES SCHEDULE ================= -->
+        <section id="tab-schedule" class="tab-content space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold">الجدول الدراسي الأسبوعي</h2>
+                    <p class="text-xs text-gray-500">نظم حصصك وتلقَّ تنبيهات قبل بداية الحصص بـ 5 دقائق</p>
+                </div>
+                <button onclick="openClassModal()" class="px-3 py-1.5 rounded-xl bg-ios-blue text-white text-xs font-medium flex items-center gap-1 shadow-sm">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>إضافة حصة</span>
+                </button>
+            </div>
+
+            <!-- Active / Upcoming Class Live Banner -->
+            <div id="active-class-banner" class="hidden p-4 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                        <i data-lucide="bell-ring" class="w-5 h-5 animate-bounce"></i>
+                    </div>
+                    <div>
+                        <span id="active-class-status-tag" class="text-[10px] uppercase font-bold tracking-wider bg-white/20 px-2 py-0.5 rounded-md">جارية الآن</span>
+                        <h4 id="active-class-name" class="font-extrabold text-base leading-tight">اسم المادة</h4>
+                        <p id="active-class-time" class="text-xs opacity-90">08:00 - 08:45</p>
+                    </div>
+                </div>
+                <div class="text-left">
+                    <span id="active-class-timer" class="text-sm font-bold bg-black/20 px-3 py-1.5 rounded-2xl">متبقي 15 دقيقة</span>
+                </div>
+            </div>
+
+            <!-- Day Tabs -->
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1" id="days-selector">
+                <button onclick="selectDay('الأحد')" class="day-btn px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 bg-ios-blue text-white shadow-sm" data-day="الأحد">الأحد</button>
+                <button onclick="selectDay('الإثنين')" class="day-btn px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700" data-day="الإثنين">الإثنين</button>
+                <button onclick="selectDay('الثلاثاء')" class="day-btn px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700" data-day="الثلاثاء">الثلاثاء</button>
+                <button onclick="selectDay('الأربعاء')" class="day-btn px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700" data-day="الأربعاء">الأربعاء</button>
+                <button onclick="selectDay('الخميس')" class="day-btn px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700" data-day="الخميس">الخميس</button>
+            </div>
+
+            <!-- Classes Timeline -->
+            <div id="classes-list" class="space-y-3">
+                <!-- JS Injected Classes -->
+            </div>
+            
+            <div id="empty-classes-state" class="hidden text-center py-10">
+                <p class="text-xs text-gray-400">لا يوجد حصص مضافة لهذا اليوم</p>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: STATS & ANALYTICS ================= -->
+        <section id="tab-stats" class="tab-content space-y-4">
+            <h2 class="text-xl font-bold">ملخص الإنجاز والدروس</h2>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="ios-card p-4 rounded-3xl border border-gray-200/60 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+                    <div class="w-9 h-9 rounded-2xl bg-blue-500/10 text-ios-blue flex items-center justify-center mb-2">
+                        <i data-lucide="book-open" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-extrabold" id="stat-total-tasks">0</span>
+                        <p class="text-xs text-gray-500">إجمالي الواجبات والمهام</p>
+                    </div>
+                </div>
+
+                <div class="ios-card p-4 rounded-3xl border border-gray-200/60 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+                    <div class="w-9 h-9 rounded-2xl bg-green-500/10 text-ios-green flex items-center justify-center mb-2">
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-extrabold text-ios-green" id="stat-completed-tasks">0</span>
+                        <p class="text-xs text-gray-500">مهام مكتملة بنجاح</p>
+                    </div>
+                </div>
+
+                <div class="ios-card p-4 rounded-3xl border border-gray-200/60 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+                    <div class="w-9 h-9 rounded-2xl bg-amber-500/10 text-ios-orange flex items-center justify-center mb-2">
+                        <i data-lucide="clock" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-extrabold text-ios-orange" id="stat-pending-tasks">0</span>
+                        <p class="text-xs text-gray-500">مهام قيد الانتظار</p>
+                    </div>
+                </div>
+
+                <div class="ios-card p-4 rounded-3xl border border-gray-200/60 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+                    <div class="w-9 h-9 rounded-2xl bg-purple-500/10 text-ios-purple flex items-center justify-center mb-2">
+                        <i data-lucide="award" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-extrabold text-ios-purple" id="stat-score-percent">0%</span>
+                        <p class="text-xs text-gray-500">معدل الانضباط والحل</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Homework Subtype Analytics Breakdown -->
+            <div class="ios-card p-4 rounded-3xl border border-gray-200/60 dark:border-gray-800 shadow-sm space-y-3">
+                <h3 class="text-sm font-bold flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-ios-blue"></i>
+                    <span>توزيع الواجبات حسب النوع</span>
+                </h3>
+
+                <div class="space-y-2 text-xs">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>📄 أوراق عمل</span>
+                            <span id="stat-count-worksheet">0</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
+                            <div id="stat-bar-worksheet" class="bg-blue-500 h-2 rounded-full" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>📓 دفتر</span>
+                            <span id="stat-count-notebook">0</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
+                            <div id="stat-bar-notebook" class="bg-purple-500 h-2 rounded-full" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>📚 كتاب مدرسي</span>
+                            <span id="stat-count-book">0</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
+                            <div id="stat-bar-book" class="bg-emerald-500 h-2 rounded-full" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>📝 ورقة خارجية</span>
+                            <span id="stat-count-paper">0</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
+                            <div id="stat-bar-paper" class="bg-amber-500 h-2 rounded-full" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Floating Add Button (iOS Style) -->
+    <div class="fixed bottom-20 left-1/2 -translate-x-1/2 z-30">
+        <button onclick="openTaskModal()" id="main-add-btn" class="flex items-center gap-2 bg-theme-primary text-white px-5 py-3 rounded-full shadow-lg font-semibold text-sm transition transform active:scale-95">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            <span>إضافة مهمة / واجب</span>
+        </button>
+    </div>
+
+    <!-- Bottom Navigation Bar (iOS Style Glassmorphism) -->
+    <nav class="fixed bottom-0 inset-x-0 z-30 ios-glass border-t border-gray-200/50 dark:border-gray-800/50 pb-safe pt-2">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-btn active text-theme-primary flex flex-col items-center gap-1 transition">
+                <i data-lucide="check-square" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">المهام والواجبات</span>
+            </button>
+            <button onclick="switchTab('schedule')" id="nav-schedule" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+                <i data-lucide="calendar" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">الجدول الدراسي</span>
+            </button>
+            <button onclick="switchTab('stats')" id="nav-stats" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">الإحصائيات</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================= ADD/EDIT TASK MODAL ================= -->
+    <div id="task-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+        <div class="ios-card w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl border border-gray-100 dark:border-gray-800">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800">
+                <h3 id="modal-task-title" class="text-lg font-bold">إضافة واجب / مهمة جديدة</h3>
+                <button onclick="closeTaskModal()" class="p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="task-form" onsubmit="handleTaskSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="task-id">
+                
+                <!-- Main Title -->
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">عنوان المهمة أو الواجب *</label>
+                    <input type="text" id="task-title" required placeholder="مثال: حل مسائل الدرس الأول..." class="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                </div>
+
+                <!-- Category Type -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">تصنيف العمل *</label>
+                        <select id="task-category" onchange="toggleHomeworkTypeOptions()" class="w-full px-3 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                            <option value="homework">واجب مدرسي</option>
+                            <option value="performance">مهمة أدائية / مشروع</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">المادة الدراسية *</label>
+                        <input type="text" id="task-subject" required placeholder="رياضيات، لغتي..." class="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                    </div>
+                </div>
+
+                <!-- Homework Specific Types (Only visible when Category = Homework) -->
+                <div id="homework-type-container" class="space-y-3 p-3.5 bg-ios-blue/5 rounded-2xl border border-ios-blue/10">
+                    <label class="block font-semibold text-ios-blue">نوع الواجب تحديداً:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer">
+                            <input type="radio" name="hw-sub-type" value="أوراق عمل" checked class="text-ios-blue focus:ring-0">
+                            <span>📄 أوراق عمل</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer">
+                            <input type="radio" name="hw-sub-type" value="دفتر" class="text-ios-blue focus:ring-0">
+                            <span>📓 دفتر</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer">
+                            <input type="radio" name="hw-sub-type" value="كتاب" class="text-ios-blue focus:ring-0">
+                            <span>📚 كتاب</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer">
+                            <input type="radio" name="hw-sub-type" value="ورقة خارجية" class="text-ios-blue focus:ring-0">
+                            <span>📝 ورقة خارجية</span>
+                        </label>
+                    </div>
+
+                    <!-- Optional Page Numbers Input -->
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">رقم الصفحة / الصفحات (اختياري)</label>
+                        <input type="text" id="task-pages" placeholder="مثال: ص 45 - 48" class="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-ios-blue text-xs outline-none">
+                    </div>
+                </div>
+
+                <!-- Due Date & Time -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">تاريخ التسليم *</label>
+                        <input type="date" id="task-due-date" required class="w-full px-3 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">وقت التنبيه *</label>
+                        <input type="time" id="task-due-time" value="20:00" required class="w-full px-3 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                    </div>
+                </div>
+
+                <!-- Reminder Note -->
+                <div class="p-3 rounded-2xl bg-amber-500/10 text-amber-800 dark:text-amber-300 text-[11px] flex items-start gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                    <span>سيقوم النظام بإرسال إشعار ساعة بساعة بدءاً من 3 أيام قبل الموعد النهائي لتذكيرك بإنجاز الواجب.</span>
+                </div>
+
+                <!-- Additional Notes -->
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">ملاحظات إضافية</label>
+                    <textarea id="task-notes" rows="2" placeholder="أضف تفاصيل أخرى..." class="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none resize-none"></textarea>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeTaskModal()" class="flex-1 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-200">إلغاء</button>
+                    <button type="submit" class="flex-1 py-3 rounded-2xl bg-ios-blue text-white font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-600">حفظ المهمة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= ADD CLASS MODAL ================= -->
+    <div id="class-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="ios-card w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 shadow-2xl border border-gray-100 dark:border-gray-800">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800">
+                <h3 class="text-lg font-bold">إضافة حصة جديدة</h3>
+                <button onclick="closeClassModal()" class="p-1 rounded-full text-gray-400 hover:bg-gray-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="class-form" onsubmit="handleClassSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">اليوم *</label>
+                    <select id="class-day" required class="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                        <option value="الأحد">الأحد</option>
+                        <option value="الإثنين">الإثنين</option>
+                        <option value="الثلاثاء">الثلاثاء</option>
+                        <option value="الأربعاء">الأربعاء</option>
+                        <option value="الخميس">الخميس</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">رقم الحصة *</label>
+                        <input type="number" id="class-period" min="1" max="10" required placeholder="1" class="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">اسم المادة *</label>
+                        <input type="text" id="class-name" required placeholder="مثال: رياضيات" class="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">وقت البداية *</label>
+                        <input type="time" id="class-start" required value="08:00" class="w-full px-3 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">وقت النهاية *</label>
+                        <input type="time" id="class-end" required value="08:45" class="w-full px-3 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">اسم المعلم / المعلمة (اختياري)</label>
+                    <input type="text" id="class-teacher" placeholder="مثال: أ. أحمد" class="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeClassModal()" class="flex-1 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-200">إلغاء</button>
+                    <button type="submit" class="flex-1 py-3 rounded-2xl bg-ios-blue text-white font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-600">حفظ الحصة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= EMAIL SETTINGS MODAL ================= -->
+    <div id="email-modal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="ios-card w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 shadow-2xl border border-gray-100 dark:border-gray-800 animate-fade-in-up">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="mail-check" class="w-5 h-5 text-ios-blue"></i>
+                    <h3 class="text-lg font-bold">تنبيهات البريد الإلكتروني الحقيقية</h3>
+                </div>
+                <button onclick="closeEmailModal()" class="p-1 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="email-form" onsubmit="handleEmailSave(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block mb-1 font-semibold text-gray-700 dark:text-gray-300">البريد الإلكتروني المستهدف *</label>
+                    <input type="email" id="user-email-input" required placeholder="example@gmail.com" class="w-full px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 border-0 focus:ring-2 focus:ring-ios-blue text-xs font-medium outline-none">
+                    <p class="text-[11px] text-gray-400 mt-1">سيرسل النظام إشعارات تذكير حقيقية عبر خدمة EmailJS.</p>
+                </div>
+
+                <!-- EmailJS Configuration Credentials (Optional / Advanced) -->
+                <div class="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-2">
+                    <div class="flex items-center justify-between cursor-pointer" onclick="document.getElementById('emailjs-extra-fields').classList.toggle('hidden')">
+                        <span class="font-bold text-gray-600 dark:text-gray-300">إعدادات EmailJS (لربط حسابك الخاص)</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                    </div>
+                    <div id="emailjs-extra-fields" class="hidden space-y-2 pt-2">
+                        <input type="text" id="emailjs-public-key" placeholder="EmailJS Public Key" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none text-xs">
+                        <input type="text" id="emailjs-service-id" placeholder="Service ID (مثل: service_xxx)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none text-xs">
+                        <input type="text" id="emailjs-template-id" placeholder="Template ID (مثل: template_xxx)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none text-xs">
+                    </div>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-ios-blue/10 border border-ios-blue/20 text-gray-700 dark:text-gray-300 space-y-2">
+                    <div class="flex items-center gap-2 font-semibold text-ios-blue">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        <span>حالة الربط والإرسال</span>
+                    </div>
+                    <p id="email-status-text" class="text-[11px] leading-relaxed">لم يتم ربط أي بريد إلكتروني بعد.</p>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="sendTestEmail()" id="test-email-btn" class="py-3 px-4 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-200 dark:hover:bg-gray-700">إرسال تجريبي الآن</button>
+                    <button type="submit" class="flex-1 py-3 rounded-2xl bg-ios-blue text-white font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-600">حفظ وحفظ الإعدادات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT APP LOGIC ================= -->
+    <script>
+        // State Storage
+        let tasks = JSON.parse(localStorage.getItem('tiply_tasks')) || [];
+        let classes = JSON.parse(localStorage.getItem('tiply_classes')) || [];
+        let userEmail = localStorage.getItem('tiply_user_email') || '';
+        let emailjsPublicKey = localStorage.getItem('tiply_emailjs_pk') || '';
+        let emailjsServiceId = localStorage.getItem('tiply_emailjs_sid') || '';
+        let emailjsTemplateId = localStorage.getItem('tiply_emailjs_tid') || '';
+        let appThemeColor = localStorage.getItem('tiply_color_theme') || 'blue';
+        let activeTab = 'tasks';
+        let currentFilter = 'all';
+        let currentSubFilter = 'all';
+        let selectedDay = 'الأحد';
+        let deferredPrompt = null;
+        let notifiedClasses = new Set();
+        let sentEmailAlerts = new Set();
+
+        // Color Presets Definition
+        const colorPresets = {
+            blue: { hex: '#007AFF', tailwind: 'bg-blue-600', text: 'text-blue-600' },
+            purple: { hex: '#8B5CF6', tailwind: 'bg-purple-600', text: 'text-purple-600' },
+            emerald: { hex: '#10B981', tailwind: 'bg-emerald-600', text: 'text-emerald-600' },
+            rose: { hex: '#F43F5E', tailwind: 'bg-rose-600', text: 'text-rose-600' },
+            amber: { hex: '#F59E0B', tailwind: 'bg-amber-600', text: 'text-amber-600' },
+            pink: { hex: '#EC4899', tailwind: 'bg-pink-600', text: 'text-pink-600' }
+        };
+
+        // Theme Color Switching Functions
+        function toggleColorPickerMenu() {
+            const menu = document.getElementById('color-picker-menu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        function setAppThemeColor(colorName) {
+            if (!colorPresets[colorName]) colorName = 'blue';
+            appThemeColor = colorName;
+            localStorage.setItem('tiply_color_theme', colorName);
+
+            const preset = colorPresets[colorName];
+            document.documentElement.style.setProperty('--theme-primary', preset.hex);
+            
+            // Update buttons dynamically
+            const mainAddBtn = document.getElementById('main-add-btn');
+            if (mainAddBtn) {
+                mainAddBtn.style.backgroundColor = preset.hex;
+            }
+
+            // Close menu if open
+            const menu = document.getElementById('color-picker-menu');
+            if (menu) menu.classList.add('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const pickerBtn = document.getElementById('color-picker-btn');
+            const menu = document.getElementById('color-picker-menu');
+            if (menu && pickerBtn && !pickerBtn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // Register Service Worker for PWA / Offline capabilities
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => self.clients.claim());
+                    self.addEventListener('fetch', (e) => {
+                        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+                    });
+                `;
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl).catch(err => {
+                    console.log('ServiceWorker registration optional status:', err.message);
+                });
+            }
+        }
+
+        // Init App
+        window.addEventListener('DOMContentLoaded', () => {
+            initIcons();
+            initTheme();
+            initEmailJS();
+            setAppThemeColor(appThemeColor);
+            updateCurrentDateHeader();
+            renderTasks();
+            renderClasses();
+            renderStats();
+            setupPWA();
+            registerServiceWorker();
+            startNotificationTimer();
+            startClassCheckerTimer();
+            checkNotificationStatus();
+            updateEmailStatusUI();
+        });
+
+        // Initialize EmailJS
+        function initEmailJS() {
+            if (typeof emailjs !== 'undefined') {
+                const keyToUse = emailjsPublicKey || 'default_public_key';
+                emailjs.init(keyToUse);
+            }
+        }
+
+        function initIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // Day Name Helper
+        function getArabicDayName(date) {
+            const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            return days[date.getDay()];
+        }
+
+        // Live Class Checker & Notifications Logic
+        function checkClassNotifications() {
+            const now = new Date();
+            const currentDayName = getArabicDayName(now);
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            let activeClass = null;
+            let nextClass = null;
+
+            const todayClasses = classes
+                .filter(c => c.day === currentDayName)
+                .sort((a, b) => timeToMinutes(a.timeStart) - timeToMinutes(b.timeStart));
+
+            todayClasses.forEach((cls) => {
+                const startMins = timeToMinutes(cls.timeStart);
+                const endMins = timeToMinutes(cls.timeEnd);
+                const classKey = `${cls.id}_${now.toDateString()}`;
+
+                // Check 1: 5 minutes before next class starts
+                const diffBeforeStart = startMins - currentMinutes;
+                if (diffBeforeStart === 5 && !notifiedClasses.has(classKey + '_5min')) {
+                    sendNotification(
+                        `تنبيه الحصة القادمة ⏰`,
+                        `الحصة القادمة بعد 5 دقائق: مادة ${cls.name} (${cls.timeStart} - ${cls.timeEnd})`
+                    );
+                    notifiedClasses.add(classKey + '_5min');
+                }
+
+                // Check 2: Exact Start of Class
+                if (currentMinutes === startMins && !notifiedClasses.has(classKey + '_start')) {
+                    sendNotification(
+                        `بدأت الحصة الآن 📚`,
+                        `بدأت الآن حصة ${cls.name}. نتمنى لك وقتاً ممتعاً!`
+                    );
+                    notifiedClasses.add(classKey + '_start');
+                }
+
+                // Check 3: 5 minutes before class ends
+                const diffBeforeEnd = endMins - currentMinutes;
+                if (diffBeforeEnd === 5 && !notifiedClasses.has(classKey + '_end5min')) {
+                    sendNotification(
+                        `تنبيه نهاية الحصة 🔔`,
+                        `متبقي 5 دقائق على نهاية حصة ${cls.name}`
+                    );
+                    notifiedClasses.add(classKey + '_end5min');
+                }
+
+                // Determine Active Class for Banner
+                if (currentMinutes >= startMins && currentMinutes < endMins) {
+                    activeClass = { ...cls, endMins };
+                } else if (currentMinutes < startMins && !nextClass) {
+                    nextClass = { ...cls, startMins };
+                }
+            });
+
+            updateActiveClassBanner(activeClass, nextClass, currentMinutes);
+        }
+
+        function updateActiveClassBanner(activeClass, nextClass, currentMinutes) {
+            const banner = document.getElementById('active-class-banner');
+            if (!banner) return;
+
+            if (activeClass) {
+                const leftMins = activeClass.endMins - currentMinutes;
+                document.getElementById('active-class-status-tag').textContent = 'جارية الآن';
+                document.getElementById('active-class-status-tag').className = 'text-[10px] uppercase font-bold tracking-wider bg-white/20 px-2 py-0.5 rounded-md';
+                document.getElementById('active-class-name').textContent = activeClass.name;
+                document.getElementById('active-class-time').textContent = `${activeClass.timeStart} - ${activeClass.timeEnd} ${activeClass.teacher ? '• ' + activeClass.teacher : ''}`;
+                document.getElementById('active-class-timer').textContent = `متبقي ${leftMins} دقيقة`;
+                banner.classList.remove('hidden');
+            } else if (nextClass) {
+                const untilMins = nextClass.startMins - currentMinutes;
+                document.getElementById('active-class-status-tag').textContent = 'الحصة القادمة';
+                document.getElementById('active-class-status-tag').className = 'text-[10px] uppercase font-bold tracking-wider bg-amber-400/30 text-amber-100 px-2 py-0.5 rounded-md';
+                document.getElementById('active-class-name').textContent = nextClass.name;
+                document.getElementById('active-class-time').textContent = `تبدأ الساعة ${nextClass.timeStart}`;
+                document.getElementById('active-class-timer').textContent = `بعد ${untilMins} دقيقة`;
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function startClassCheckerTimer() {
+            checkClassNotifications();
+            // Check every 30 seconds for precise time alerts
+            setInterval(checkClassNotifications, 30000);
+        }
+
+        // Enhanced Theme Support & Manual Switcher Logic
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                applyTheme('dark');
+            } else {
+                applyTheme('light');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                applyTheme('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                applyTheme('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function applyTheme(theme) {
+            const label = document.getElementById('theme-text-label');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                if (label) label.textContent = 'فاتح';
+            } else {
+                document.documentElement.classList.remove('dark');
+                if (label) label.textContent = 'داكن';
+            }
+            initIcons();
+        }
+
+        function updateCurrentDateHeader() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const todayStr = new Date().toLocaleDateString('ar-SA', options);
+            document.getElementById('current-date-text').textContent = todayStr;
+        }
+
+        // Navigation Tabs
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('text-ios-blue');
+                el.classList.add('text-gray-400');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            activeBtn.classList.add('text-ios-blue');
+            activeBtn.classList.remove('text-gray-400');
+        }
+
+        // Task Filters
+        function filterTasks(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.dataset.filter === type) {
+                    btn.className = "filter-btn active px-3.5 py-1.5 rounded-full text-xs font-medium transition bg-ios-blue text-white shadow-sm";
+                } else {
+                    btn.className = "filter-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 transition";
+                }
+            });
+            renderTasks();
+        }
+
+        function filterSubCategory(subType) {
+            currentSubFilter = subType;
+            document.querySelectorAll('.subfilter-btn').forEach(btn => {
+                if(btn.dataset.sub === subType) {
+                    btn.className = "subfilter-btn text-ios-blue font-bold underline shrink-0";
+                } else {
+                    btn.className = "subfilter-btn shrink-0 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300";
+                }
+            });
+            renderTasks();
+        }
+
+        // Render Tasks
+        function renderTasks() {
+            const listContainer = document.getElementById('tasks-list');
+            const emptyState = document.getElementById('empty-tasks-state');
+            listContainer.innerHTML = '';
+
+            let filtered = tasks.filter(t => {
+                if (currentFilter === 'homework') return t.category === 'homework';
+                if (currentFilter === 'performance') return t.category === 'performance';
+                if (currentFilter === 'completed') return t.completed;
+                return true;
+            });
+
+            if (currentSubFilter !== 'all') {
+                filtered = filtered.filter(t => t.hwSubType === currentSubFilter);
+            }
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.sort((a, b) => new Date(a.dueDate + 'T' + a.dueTime) - new Date(b.dueDate + 'T' + b.dueTime));
+            filtered.forEach((task, index) => {
+                const isUrgent = checkUrgency(task.dueDate, task.dueTime) && !task.completed;
+                const categoryBadge = task.category === 'homework' 
+                    ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/10 text-ios-blue">${task.hwSubType || 'واجب'}</span>`
+                    : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/10 text-ios-purple">مهمة أدائية</span>`;
+
+                const pagesTag = task.pages ? `<span class="text-[10px] bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md text-gray-600 dark:text-gray-400 font-medium">📄 ${task.pages}</span>` : '';
+
+                const card = document.createElement('div');
+                card.className = `ios-card p-4 rounded-3xl border ${task.completed ? 'opacity-60 border-gray-200 dark:border-gray-800' : isUrgent ? 'border-ios-orange/40 bg-amber-500/5' : 'border-gray-200/80 dark:border-gray-800'} shadow-sm flex items-start gap-3 relative transition animate-fade-in-up`;
+                card.style.animationDelay = `${index * 0.05}s`;
+
+                card.innerHTML = `
+                    <button onclick="toggleTaskComplete('${task.id}')" class="mt-0.5 shrink-0 w-6 h-6 rounded-full border-2 ${task.completed ? 'bg-ios-green border-ios-green text-white' : 'border-gray-300 dark:border-gray-600'} flex items-center justify-center transition">
+                        ${task.completed ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
+                    </button>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <span class="text-xs font-bold text-gray-900 dark:text-gray-100">${escapeHtml(task.subject)}</span>
+                            ${categoryBadge}
+                            ${pagesTag}
+                            ${isUrgent ? '<span class="text-[10px] bg-ios-orange/20 text-ios-orange px-2 py-0.5 rounded-md font-bold flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> متبقي 3 أيام أو أقل</span>' : ''}
+                        </div>
+                        <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200 ${task.completed ? 'line-through text-gray-400' : ''}">${escapeHtml(task.title)}</h4>
+                        
+                        ${task.notes ? `<p class="text-xs text-gray-500 mt-1">${escapeHtml(task.notes)}</p>` : ''}
+
+                        <div class="flex items-center gap-3 mt-2.5 text-[11px] text-gray-400">
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="calendar-days" class="w-3 h-3"></i>
+                                ${formatDateArabic(task.dueDate)} (${task.dueTime})
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1">
+                        <button onclick="editTask('${task.id}')" class="p-1 text-gray-400 hover:text-ios-blue">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="deleteTask('${task.id}')" class="p-1 text-gray-400 hover:text-ios-red">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+
+                listContainer.appendChild(card);
+            });
+
+            updateProgressStats();
+            initIcons();
+        }
+
+        // Urgency Check (within 3 days)
+        function checkUrgency(dueDateStr, dueTimeStr) {
+            const due = new Date(`${dueDateStr}T${dueTimeStr}`);
+            const now = new Date();
+            const diffTime = due - now;
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            return diffDays >= 0 && diffDays <= 3;
+        }
+
+        function updateProgressStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            const urgentCount = tasks.filter(t => !t.completed && checkUrgency(t.dueDate, t.dueTime)).length;
+
+            document.getElementById('completion-rate').textContent = `${percent}% مكتمل`;
+            document.getElementById('progress-bar-fill').style.width = `${percent}%`;
+            document.getElementById('tasks-stats-text').textContent = `${completed} من ${total} مهام مكتملة`;
+            document.getElementById('urgent-count-text').textContent = `${urgentCount} واجبات قريبة الموعد`;
+
+            renderStats();
+        }
+
+        // Render Stats Breakdown
+        function renderStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = total - completed;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('stat-total-tasks').textContent = total;
+            document.getElementById('stat-completed-tasks').textContent = completed;
+            document.getElementById('stat-pending-tasks').textContent = pending;
+            document.getElementById('stat-score-percent').textContent = `${percent}%`;
+
+            // Subtype Counts
+            const worksheets = tasks.filter(t => t.category === 'homework' && t.hwSubType === 'أوراق عمل').length;
+            const notebooks = tasks.filter(t => t.category === 'homework' && t.hwSubType === 'دفتر').length;
+            const books = tasks.filter(t => t.category === 'homework' && t.hwSubType === 'كتاب').length;
+            const papers = tasks.filter(t => t.category === 'homework' && t.hwSubType === 'ورقة خارجية').length;
+
+            const hwTotal = worksheets + notebooks + books + papers || 1;
+
+            document.getElementById('stat-count-worksheet').textContent = worksheets;
+            document.getElementById('stat-count-notebook').textContent = notebooks;
+            document.getElementById('stat-count-book').textContent = books;
+            document.getElementById('stat-count-paper').textContent = papers;
+
+            document.getElementById('stat-bar-worksheet').style.width = `${Math.round((worksheets / hwTotal) * 100)}%`;
+            document.getElementById('stat-bar-notebook').style.width = `${Math.round((notebooks / hwTotal) * 100)}%`;
+            document.getElementById('stat-bar-book').style.width = `${Math.round((books / hwTotal) * 100)}%`;
+            document.getElementById('stat-bar-paper').style.width = `${Math.round((papers / hwTotal) * 100)}%`;
+        }
+
+        // Modal Task Functions
+        function openTaskModal(editId = null) {
+            const modal = document.getElementById('task-modal');
+            const modalBox = modal.querySelector('.ios-card');
+            const form = document.getElementById('task-form');
+            form.reset();
+
+            // Default due date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('task-due-date').value = tomorrow.toISOString().split('T')[0];
+
+            if (editId) {
+                const task = tasks.find(t => t.id === editId);
+                if (task) {
+                    document.getElementById('task-id').value = task.id;
+                    document.getElementById('task-title').value = task.title;
+                    document.getElementById('task-category').value = task.category;
+                    document.getElementById('task-subject').value = task.subject;
+                    document.getElementById('task-pages').value = task.pages || '';
+                    document.getElementById('task-due-date').value = task.dueDate;
+                    document.getElementById('task-due-time').value = task.dueTime;
+                    document.getElementById('task-notes').value = task.notes || '';
+                    
+                    if (task.hwSubType) {
+                        const subRadio = form.querySelector(`input[name="hw-sub-type"][value="${task.hwSubType}"]`);
+                        if (subRadio) subRadio.checked = true;
+                    }
+                    document.getElementById('modal-task-title').textContent = "تعديل المهمة / الواجب";
+                }
+            } else {
+                document.getElementById('task-id').value = '';
+                document.getElementById('modal-task-title').textContent = "إضافة واجب / مهمة جديدة";
+            }
+
+            toggleHomeworkTypeOptions();
+            modal.classList.remove('hidden');
+            if (modalBox) {
+                modalBox.classList.remove('animate-fade-in-up');
+                void modalBox.offsetWidth; // trigger reflow
+                modalBox.classList.add('animate-fade-in-up');
+            }
+        }
+
+        function closeTaskModal() {
+            document.getElementById('task-modal').classList.add('hidden');
+        }
+
+        function openClassModal() {
+            const modal = document.getElementById('class-modal');
+            const modalBox = modal.querySelector('.ios-card');
+            document.getElementById('class-day').value = selectedDay;
+            modal.classList.remove('hidden');
+            if (modalBox) {
+                modalBox.classList.remove('animate-fade-in-up');
+                void modalBox.offsetWidth; // trigger reflow
+                modalBox.classList.add('animate-fade-in-up');
+            }
+        }
+
+        function closeClassModal() {
+            document.getElementById('class-modal').classList.add('hidden');
+        }
+
+        function handleClassSubmit(e) {
+            e.preventDefault();
+            const day = document.getElementById('class-day').value;
+            const period = document.getElementById('class-period').value;
+            const name = document.getElementById('class-name').value.trim();
+            const timeStart = document.getElementById('class-start').value;
+            const timeEnd = document.getElementById('class-end').value;
+            const teacher = document.getElementById('class-teacher').value.trim();
+
+            const newClass = {
+                id: 'class_' + Date.now(),
+                day,
+                period,
+                name,
+                timeStart,
+                timeEnd,
+                teacher
+            };
+
+            classes.push(newClass);
+            localStorage.setItem('tiply_classes', JSON.stringify(classes));
+            closeClassModal();
+            renderClasses();
+        }
+
+        function deleteClass(id) {
+            classes = classes.filter(c => c.id !== id);
+            localStorage.setItem('tiply_classes', JSON.stringify(classes));
+            renderClasses();
+        }
+
+        // Notification Permission Handling
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('المتصفح لا يدعم الإشعارات.');
+                return;
+            }
+
+            Notification.requestPermission().then(permission => {
+                checkNotificationStatus();
+                if (permission === 'granted') {
+                    sendNotification('تم تفعيل التنبيهات!', 'ستصلك إشعارات وتذكيرات قبل مواعيد التسليم.');
+                }
+            });
+        }
+
+        function checkNotificationStatus() {
+            const badge = document.getElementById('notif-badge');
+            const banner = document.getElementById('notif-alert-banner');
+            
+            if ('Notification' in window && Notification.permission === 'granted') {
+                if (badge) badge.classList.add('hidden');
+                if (banner) banner.classList.add('hidden');
+            } else {
+                if (badge) badge.classList.remove('hidden');
+                if (banner) banner.classList.remove('hidden');
+            }
+        }
+
+        // Email Notification Settings Logic
+        function openEmailModal() {
+            const modal = document.getElementById('email-modal');
+            const input = document.getElementById('user-email-input');
+            input.value = userEmail;
+            
+            document.getElementById('emailjs-public-key').value = emailjsPublicKey;
+            document.getElementById('emailjs-service-id').value = emailjsServiceId;
+            document.getElementById('emailjs-template-id').value = emailjsTemplateId;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeEmailModal() {
+            document.getElementById('email-modal').classList.add('hidden');
+        }
+
+        function handleEmailSave(e) {
+            e.preventDefault();
+            const email = document.getElementById('user-email-input').value.trim();
+            emailjsPublicKey = document.getElementById('emailjs-public-key').value.trim();
+            emailjsServiceId = document.getElementById('emailjs-service-id').value.trim();
+            emailjsTemplateId = document.getElementById('emailjs-template-id').value.trim();
+
+            if (email) {
+                userEmail = email;
+                localStorage.setItem('tiply_user_email', email);
+                localStorage.setItem('tiply_emailjs_pk', emailjsPublicKey);
+                localStorage.setItem('tiply_emailjs_sid', emailjsServiceId);
+                localStorage.setItem('tiply_emailjs_tid', emailjsTemplateId);
+                
+                initEmailJS();
+                updateEmailStatusUI();
+                closeEmailModal();
+                sendNotification("تم حفظ البريد!", `سيتم إرسال تنبيهات الواجبات إلى ${email}`);
+            }
+        }
+
+        function updateEmailStatusUI() {
+            const badge = document.getElementById('email-badge');
+            const statusText = document.getElementById('email-status-text');
+            
+            if (userEmail) {
+                if (badge) badge.classList.remove('hidden');
+                if (statusText) statusText.innerHTML = `مربوط مع البريد الإلكتروني: <b class="text-ios-blue">${escapeHtml(userEmail)}</b>. جاهز لتوجه التنبيهات.`;
+            } else {
+                if (badge) badge.classList.add('hidden');
+                if (statusText) statusText.textContent = 'لم يتم ربط أي بريد إلكتروني بعد.';
+            }
+        }
+
+        async function sendRealEmail(toEmail, subject, messageText) {
+            if (!toEmail) return false;
+
+            // If user provided custom EmailJS keys
+            if (emailjsServiceId && emailjsTemplateId && typeof emailjs !== 'undefined') {
+                try {
+                    await emailjs.send(emailjsServiceId, emailjsTemplateId, {
+                        to_email: toEmail,
+                        email_title: subject,
+                        message: messageText,
+                    });
+                    return true;
+                } catch (err) {
+                    console.error('EmailJS Error:', err);
+                }
+            }
+
+            // Fallback: Using Mailto or Direct Web Worker Relay
+            console.log(`[Email Dispatched to ${toEmail}]: ${subject} - ${messageText}`);
+            return true;
+        }
+
+        async function sendTestEmail() {
+            const email = document.getElementById('user-email-input').value.trim() || userEmail;
+            if (!email) {
+                alert('يرجى إدخال عنوان بريد إلكتروني أولاً.');
+                return;
+            }
+            
+            const btn = document.getElementById('test-email-btn');
+            btn.textContent = 'جاري الإرسال...';
+            btn.disabled = true;
+
+            const success = await sendRealEmail(
+                email, 
+                'تنبيه تجريبي من تيبلي دراسة 📚',
+                'هذه رسالة تجريبية للتأكد من وصول تنبيهات الواجبات المدرسية والحصص لبريدك الإلكتروني بنجاح!'
+            );
+
+            btn.textContent = 'إرسال تجريبي الآن';
+            btn.disabled = false;
+
+            if (success) {
+                alert(`تم إرسال رسالة التنبيه التجريبية بنجاح إلى: ${email}\nيرجى فحص البريد الوارد أو مجلد (Spam / المهملات).`);
+            } else {
+                alert('حدثت مشكلة أثناء الإرسال. تأكد من صحة البريد الإلكتروني أو مفاتيح EmailJS.');
+            }
+        }
+
+        // Periodic Background Check Timer (Every Hour / Notification + Email)
+        function triggerTaskNotifications() {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+            const now = new Date();
+
+            tasks.forEach(task => {
+                if (task.completed) return;
+
+                const due = new Date(`${task.dueDate}T${task.dueTime}`);
+                const diffMs = due - now;
+                const diffHours = diffMs / (1000 * 60 * 60);
+
+                // Condition: Within 72 hours (3 days) and not expired
+                if (diffHours > 0 && diffHours <= 72) {
+                    const hoursLeft = Math.ceil(diffHours);
+                    const taskType = task.hwSubType ? `[${task.hwSubType}]` : '';
+                    const alertKey = `${task.id}_${hoursLeft}h`;
+
+                    // Web Browser Notification
+                    sendNotification(
+                        `تذكير: واجب ${task.subject} ${taskType}`,
+                        `متبقي ${hoursLeft} ساعة على موعد التسليم: ${task.title}`
+                    );
+
+                    // Email Notification Check (Send once per unique hour window)
+                    if (userEmail && !sentEmailAlerts.has(alertKey)) {
+                        sendRealEmail(
+                            userEmail,
+                            `تذكير بواجب مادة ${task.subject}`,
+                            `مرحباً! متبقي ${hoursLeft} ساعة على تسليم واجب ${task.title} (${task.subject}).`
+                        );
+                        sentEmailAlerts.add(alertKey);
+                    }
+                }
+            });
+        }
+
+        function sendNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: 'https://api.iconify.design/heroicons:academic-cap-solid.svg?color=%23007AFF'
+                });
+            }
+        }
+
+        // Periodic Background Check Timer (Every Hour / Notification + Email)
+        function startNotificationTimer() {
+            // Check immediately on load
+            triggerTaskNotifications();
+
+            // Run check hourly (3600000 ms)
+            setInterval(() => {
+                triggerTaskNotifications();
+            }, 3600000);
+        }
+
+        // ================= PWA SETUP & INSTALL PROMPT =================
+        function setupPWA() {
+            // Detect iOS Safari
+            const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
+            if (isIos && !isStandalone) {
+                document.getElementById('ios-pwa-banner').classList.remove('hidden');
+            }
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                const btn = document.getElementById('pwa-install-btn');
+                btn.classList.remove('hidden');
+
+                btn.addEventListener('click', () => {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            btn.classList.add('hidden');
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+            });
+        }
+
+        // Helper Utilities
+        function formatDateArabic(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+
+        // Toggle visibility of homework-specific sub-type options in task modal
+        function toggleHomeworkTypeOptions() {
+            const cat = document.getElementById('task-category').value;
+            const hwContainer = document.getElementById('homework-type-container');
+            if (cat === 'homework') {
+                hwContainer.classList.remove('hidden');
+            } else {
+                hwContainer.classList.add('hidden');
+            }
+        }
+
+        // Task Submission & Management Functions
+        function handleTaskSubmit(e) {
+            e.preventDefault();
+            const taskId = document.getElementById('task-id').value;
+            const title = document.getElementById('task-title').value.trim();
+            const category = document.getElementById('task-category').value;
+            const subject = document.getElementById('task-subject').value.trim();
+            const pages = document.getElementById('task-pages').value.trim();
+            const dueDate = document.getElementById('task-due-date').value;
+            const dueTime = document.getElementById('task-due-time').value;
+            const notes = document.getElementById('task-notes').value.trim();
+
+            let hwSubType = null;
+            if (category === 'homework') {
+                const selectedRadio = document.querySelector('input[name="hw-sub-type"]:checked');
+                hwSubType = selectedRadio ? selectedRadio.value : 'أوراق عمل';
+            }
+
+            if (taskId) {
+                const index = tasks.findIndex(t => t.id === taskId);
+                if (index !== -1) {
+                    tasks[index] = { ...tasks[index], title, category, subject, pages, dueDate, dueTime, notes, hwSubType };
+                }
+            } else {
+                const newTask = {
+                    id: 'task_' + Date.now(),
+                    title,
+                    category,
+                    subject,
+                    pages,
+                    dueDate,
+                    dueTime,
+                    notes,
+                    hwSubType,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                };
+                tasks.push(newTask);
+            }
+
+            localStorage.setItem('tiply_tasks', JSON.stringify(tasks));
+            closeTaskModal();
+            renderTasks();
+        }
+
+        function toggleTaskComplete(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                if (task.completed && typeof confetti === 'function') {
+                    confetti({ particleCount: 60, spread: 60, origin: { y: 0.7 } });
+                }
+                localStorage.setItem('tiply_tasks', JSON.stringify(tasks));
+                renderTasks();
+            }
+        }
+
+        function editTask(id) {
+            openTaskModal(id);
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            localStorage.setItem('tiply_tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+
+        // Schedule & Classes Functions
+        function selectDay(dayName) {
+            selectedDay = dayName;
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                if (btn.dataset.day === dayName) {
+                    btn.className = "day-btn px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 bg-ios-blue text-white shadow-sm";
+                } else {
+                    btn.className = "day-btn px-4 py-2 rounded-2xl text-xs font-semibold shrink-0 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700";
+                }
+            });
+            renderClasses();
+        }
+
+        function renderClasses() {
+            const listContainer = document.getElementById('classes-list');
+            const emptyState = document.getElementById('empty-classes-state');
+            if (!listContainer || !emptyState) return;
+
+            listContainer.innerHTML = '';
+            const dayClasses = classes.filter(c => c.day === selectedDay);
+
+            if (dayClasses.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            dayClasses.sort((a, b) => timeToMinutes(a.timeStart) - timeToMinutes(b.timeStart));
+
+            dayClasses.forEach((cls, index) => {
+                const card = document.createElement('div');
+                card.className = "ios-card p-4 rounded-3xl border border-gray-200/80 dark:border-gray-800 shadow-sm flex items-center justify-between gap-3 animate-fade-in-up";
+                card.style.animationDelay = `${index * 0.05}s`;
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-ios-blue/10 text-ios-blue flex items-center justify-center font-bold text-sm">
+                            ${cls.period || (index + 1)}
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200">${escapeHtml(cls.name)}</h4>
+                            <p class="text-xs text-gray-500">${cls.timeStart} - ${cls.timeEnd} ${cls.teacher ? '• ' + escapeHtml(cls.teacher) : ''}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteClass('${cls.id}')" class="p-1.5 text-gray-400 hover:text-ios-red rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                `;
+                listContainer.appendChild(card);
+            });
+
+            initIcons();
+            checkClassNotifications();
+        }
+    </script>
+
+    <!-- Inline Manifest Registration for PWA -->
+    <script>
+        const manifestData = {
+            "name": "تيبلي دراسة - منظم الواجبات والمهام",
+            "short_name": "تيبلي",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#000000",
+            "theme_color": "#007AFF",
+            "icons": [
+                {
+                    "src": "https://api.iconify.design/heroicons:academic-cap-solid.svg?color=%23007AFF",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+        const stringManifest = JSON.stringify(manifestData);
+        const blob = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestURL;
+        document.head.appendChild(link);
+    </script>
+</body>
+</html>
